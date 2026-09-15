@@ -40,8 +40,8 @@ const TOKEN = {
   sidebar: '--sidebar', active: '--active', flag: '--flag', flagBg: '--flag-bg', ok: '--ok', shadow: '--shadow',
   stageA: '--stage-a', stageB: '--stage-b'
 }
-const EVENT_ICONS = ['clock', 'send', 'rule', 'handoff', 'tool']
-const FEATURE_KINDS = ['computer', 'watch', 'memory', 'handoff']
+const EVENT_ICONS = ['clock', 'send', 'rule', 'handoff', 'tool', 'book', 'priority', 'tag', 'person', 'card', 'pause']
+const FEATURE_KINDS = ['computer', 'watch', 'memory', 'handoff', 'checklist']
 
 function tokens(obj, where) {
   return Object.entries(obj).map(([k, v]) => {
@@ -68,6 +68,13 @@ function validate(d, name) {
   const list = (v) => Array.isArray(v) && v.length > 0
   const obj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v)
 
+  if (d.app && 'typingOn' in d.app && !['b', 'u'].includes(d.app.typingOn)) errs.push(`app.typingOn 只能是 'b' 或 'u'`)
+  const platformIds = obj(d.platforms) ? Object.keys(d.platforms) : []
+  for (const [id, p] of Object.entries(obj(d.platforms) ? d.platforms : {})) {
+    if (!obj(p) || !str(p.label) || !str(p.color)) errs.push(`平台「${id}」需要 label 與 color`)
+  }
+  const checkRowsOk = (rows) => list(rows) && rows.every((r) => Array.isArray(r) && r.length === 3 && ['ok', 'flag'].includes(r[0]) && str(r[1]) && str(r[2]))
+
   for (const [id, a] of Object.entries(d.agents || {})) {
     if (!obj(a) || !str(a.name) || !str(a.glyph) || !str(a.color)) errs.push(`小編「${id}」需要 name、glyph、color`)
   }
@@ -77,6 +84,8 @@ function validate(d, name) {
     const where = `對話「${c.id}」`
     if (!str(c.id)) errs.push(`convos 第 ${ci + 1} 段缺少 id（群組也要有自己的 id）`)
     if (!str(c.time)) errs.push(`${where} 缺少 time`)
+    if ('platform' in c && !platformIds.includes(c.platform)) errs.push(`${where} 的 platform「${c.platform}」沒有定義在 platforms 裡`)
+    if ('preview' in c && !str(c.preview)) errs.push(`${where} 的 preview 不能是空的`)
     if (c.group) {
       if (!str(c.name)) errs.push(`${where} 是群組，需要 name`)
       if (!Array.isArray(c.group) || c.group.length !== 2 || c.group[0] === c.group[1] || !c.group.every(hasAgent)) {
@@ -93,7 +102,7 @@ function validate(d, name) {
       if (kinds.length !== 1) return errs.push(`${at} 必須剛好是 t/u/b/c/e 其中一種，現在是 [${kinds.join(',')}]`)
       const k = kinds[0]
       if (k === 'c') {
-        if (!list(s.c) || !s.c.every((r) => Array.isArray(r) && r.length === 3 && ['ok', 'flag'].includes(r[0]) && str(r[1]) && str(r[2]))) {
+        if (!checkRowsOk(s.c)) {
           errs.push(`${at} 清單要至少一行，每一行是 ['ok' 或 'flag', 項目, 結果]`)
         }
       } else if (!str(s[k])) {
@@ -107,6 +116,8 @@ function validate(d, name) {
         errs.push(`${at} 的 from「${s.from}」${c.group ? '不是這個群組的成員' : '不在 agents 裡'}`)
       }
       if (c.group && (k === 'b' || k === 'c') && !s.from) errs.push(`${at} 在群組裡，小編訊息要標 from`)
+      if ('as' in s && (k !== 'u' || !str(s.as))) errs.push(`${at} 的 as（回覆者名稱）只能用在 u，且不能是空的`)
+      if ('tone' in s && (k !== 'u' || !['ai', 'human'].includes(s.tone))) errs.push(`${at} 的 tone 只能用在 u，值為 'ai' 或 'human'`)
     })
   }
 
@@ -119,7 +130,8 @@ function validate(d, name) {
     if (!obj(f)) { errs.push(`${at} 不是物件`); continue }
     if (!FEATURE_KINDS.includes(f.kind)) { errs.push(`${at} kind「${f.kind}」不存在，可用：${FEATURE_KINDS.join(', ')}`); continue }
     if (!str(f.title) || !str(f.desc)) errs.push(`${at} 缺少 title 或 desc`)
-    const need = { computer: ['label', 'status', 'task'], watch: ['banner', 'cursor'], memory: ['event'], handoff: [] }[f.kind]
+    const need = { computer: ['label', 'status', 'task'], watch: ['banner', 'cursor'], memory: ['event'], handoff: [], checklist: [] }[f.kind]
+    if (f.kind === 'checklist' && !checkRowsOk(f.rows)) errs.push(`${at}（checklist）的 rows 要至少一行，每一行是 ['ok' 或 'flag', 項目, 結果]`)
     for (const key of need) if (!str(f[key])) errs.push(`${at}（${f.kind}）缺少 ${key}`)
     if (f.kind === 'memory') {
       if (!list(f.bubbles) || !f.bubbles.every(str)) errs.push(`${at}（memory）的 bubbles 要是至少一句的陣列`)

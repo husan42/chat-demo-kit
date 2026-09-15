@@ -91,6 +91,13 @@ body {
 .b .bubble { background: var(--bubble); color: var(--text); border-bottom-left-radius: 6px; }
 .bubble b { font-weight: 700; }
 .sender { font-size: 12px; color: var(--muted); margin: 0 0 4px 4px; display: flex; align-items: center; gap: 6px; }
+.row.u .sender { margin: 0 4px 4px 0; }
+/* 真人回覆：和 AI 回覆（主色）分開，一眼看得出是誰在回 */
+.human .bubble { background: var(--text); color: var(--card); }
+.row.u .typing { border-bottom-left-radius: 16px; border-bottom-right-radius: 6px; }
+.human .typing { background: var(--text); }
+.human .typing i { background: var(--card); }
+.pf { display: inline-block; vertical-align: 1px; margin-left: 6px; font-size: 10px; font-weight: 700; line-height: 1; padding: 3px 5px; border-radius: 4px; letter-spacing: .02em; white-space: nowrap; }
 
 .stamp { align-self: center; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; padding: 4px 0; animation: rise .32s ease-out both; }
 .event { align-self: center; display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--muted); padding: 4px 0; animation: rise .32s ease-out both; text-align: center; }
@@ -205,6 +212,10 @@ body {
 .fc-chip { display: inline-flex; align-items: center; gap: 5px; padding: 1px 9px 1px 3px; border-radius: 999px; background: var(--active); color: var(--text); }
 .av.xs { width: 16px; height: 16px; border-radius: 50%; font-size: 9px; }
 
+.fc-list { width: min(380px, 92%); display: flex; flex-direction: column; gap: 8px; }
+.fc-list-cap { font-size: 12.5px; color: var(--muted); text-align: center; }
+.fc-list .bubble { max-width: none; background: var(--card); padding: 14px 18px; border-radius: 14px; }
+
 .fc-relay { display: flex; align-items: center; gap: 6px; animation: rise .4s ease-out both; }
 .fc-relay .av { border-radius: 50%; width: 30px; height: 30px; font-size: 13px; box-shadow: 0 0 0 3px var(--panel); }
 .fc-pill { display: inline-flex; align-items: center; gap: 7px; padding: 5px 13px; border-radius: 999px; font-size: 13px; background: var(--card); color: var(--text); border: 1px solid var(--brand-hover); white-space: nowrap; }
@@ -237,6 +248,7 @@ body {
   .item { grid-template-columns: 36px; justify-items: center; gap: 4px; padding: 8px 6px; width: 76px; position: relative; }
   .item-preview, .item-meta span { display: none; }
   .item-name { font-size: 11.5px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 64px; }
+  .item-name .pf { display: none; }
   .item-meta { position: absolute; top: 6px; right: 10px; }
   .scroll { padding: 14px 14px 6px; }
   .bubble { max-width: 90%; }

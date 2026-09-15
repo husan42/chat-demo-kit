@@ -11,6 +11,12 @@
     send: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M14 2 2 7l5 2 2 5z"/><path d="m7 9 3-3"/></svg>',
     rule: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3.5h10M3 8h10M3 12.5h6"/></svg>',
     handoff: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 8h10M9 4.5 12.5 8 9 11.5"/></svg>',
+    book: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M2.5 3.2c2-.6 3.8-.4 5.5.8 1.7-1.2 3.5-1.4 5.5-.8v9.4c-2-.6-3.8-.4-5.5.8-1.7-1.2-3.5-1.4-5.5-.8z"/><path d="M8 4v9.4"/></svg>',
+    priority: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V3M4 7l4-4 4 4"/></svg>',
+    tag: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M2.5 2.5h5.3l5.7 5.7-5.3 5.3-5.7-5.7z"/><circle cx="5.3" cy="5.3" r="1" fill="currentColor"/></svg>',
+    person: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="5.5" r="2.8"/><path d="M2.8 14c.6-2.8 2.6-4.3 5.2-4.3s4.6 1.5 5.2 4.3"/></svg>',
+    card: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2.5" width="12" height="11" rx="1.8"/><path d="M2 9.5h12M5 12h3"/></svg>',
+    pause: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.2"/><path d="M6.5 5.5v5M9.5 5.5v5"/></svg>',
     tool: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 2v4M10 2v4M4 6h8v2a4 4 0 0 1-8 0zM8 12v2"/></svg>',
     ok: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 8.5 3.2 3L13 4.5"/></svg>',
     flag: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M3.5 1.8h1.4v12.6H3.5z"/><path d="M5 2.3h8.2l-2 3.2 2 3.2H5z"/></svg>'
@@ -27,16 +33,26 @@
     return avatar(c.id);
   }
   function nameOf(c) { return c.name || D.agents[c.id].name; }
+  // 「輸入中」動畫出現在哪一側：b＝左側（預設，對方是 AI 小編），u＝右側（例如客服收件匣裡由 AI 回覆顧客）
+  var typingOn = D.app.typingOn || 'b';
   function lastLine(c) {
+    if (c.preview) return c.preview;
     for (var i = c.script.length - 1; i >= 0; i--) {
-      if (c.script[i].b) {
+      var s = c.script[i];
+      if (typingOn === 'u' && s.u) return s.u;
+      if (typingOn === 'b' && s.b) {
         // b 是 HTML：交給瀏覽器解析後取純文字，&lt; 這類字元才不會被跳脫兩次
         var tmp = document.createElement('div');
-        tmp.innerHTML = c.script[i].b;
+        tmp.innerHTML = s.b;
         return tmp.textContent;
       }
     }
     return '';
+  }
+  function platformBadge(c) {
+    if (!c.platform) return '';
+    var p = D.platforms[c.platform];
+    return '<span class="pf" style="background:' + p.color + ';color:' + (p.ink || '#fff') + '">' + esc(p.label) + '</span>';
   }
 
   // ---------- 功能卡片的示意畫面 ----------
@@ -74,6 +90,11 @@
         f.bubbles.map(function (b) { return '<div class="fc-bubble">' + b + '</div>'; }).join('') +
         '<div class="fc-mem-event">' + esc(f.event) + '<span class="fc-chip">' + avatar(f.agent, 'xs') + esc(D.agents[f.agent].name) + '</span></div>' +
         '</div></div>';
+    }
+    if (f.kind === 'checklist') {
+      return '<div class="fc-stage fc-plain"><div class="fc-list">' +
+        (f.caption ? '<div class="fc-list-cap">' + esc(f.caption) + '</div>' : '') +
+        '<div class="bubble checks">' + checkRows(f.rows) + '</div></div></div>';
     }
     // handoff
     return '<div class="fc-stage fc-plain"><div class="fc-relay" data-relay="' + i + '"></div></div>';
@@ -160,7 +181,7 @@
       var active = current && current.id === c.id;
       return '<li><button class="item" type="button" data-id="' + esc(c.id) + '" aria-current="' + active + '">' +
         convoAvatar(c) +
-        '<span class="item-text"><span class="item-name">' + esc(nameOf(c)) + '</span><span class="item-preview">' + esc(lastLine(c)) + '</span></span>' +
+        '<span class="item-text"><span class="item-name">' + esc(nameOf(c)) + platformBadge(c) + '</span><span class="item-preview">' + esc(lastLine(c)) + '</span></span>' +
         '<span class="item-meta"><span>' + esc(c.time) + '</span>' + (seen[c.id] ? '' : '<i class="dot" aria-label="' + esc(ui.unread) + '"></i>') + '</span>' +
         '</button></li>';
     }).join('');
@@ -168,6 +189,16 @@
 
   function senderHead(s) {
     return s.from ? '<div class="sender">' + avatar(s.from, 'sm') + esc(D.agents[s.from].name) + '</div>' : '';
+  }
+
+  function checkRows(rows) {
+    return rows.map(function (r) {
+      return '<div class="check ' + r[0] + '">' + ICON[r[0]] + '<span class="k">' + esc(r[1]) + '</span><span class="v">→ ' + esc(r[2]) + '</span></div>';
+    }).join('');
+  }
+
+  function replyHead(s) {
+    return s.as ? '<div class="sender">' + esc(s.as) + '</div>' : '';
   }
 
   function stepEl(s) {
@@ -179,15 +210,13 @@
       return el;
     }
     if (s.u) {
-      el.className = 'row u';
-      el.innerHTML = '<div class="bubble">' + esc(s.u) + '</div>';
+      el.className = 'row u' + (s.tone === 'human' ? ' human' : '');
+      el.innerHTML = replyHead(s) + '<div class="bubble">' + esc(s.u) + '</div>';
       return el;
     }
     el.className = 'row b';
     if (s.c) {
-      el.innerHTML = senderHead(s) + '<div class="bubble checks">' + s.c.map(function (r) {
-        return '<div class="check ' + r[0] + '">' + ICON[r[0]] + '<span class="k">' + esc(r[1]) + '</span><span class="v">→ ' + esc(r[2]) + '</span></div>';
-      }).join('') + '</div>';
+      el.innerHTML = senderHead(s) + '<div class="bubble checks">' + checkRows(s.c) + '</div>';
       return el;
     }
     el.innerHTML = senderHead(s) + '<div class="bubble">' + s.b + '</div>';
@@ -195,7 +224,7 @@
   }
 
   function header(c) {
-    titleEl.innerHTML = convoAvatar(c) + '<div style="min-width:0"><strong>' + esc(nameOf(c)) + '</strong> <span>' + esc(c.sub || '') + '</span></div>';
+    titleEl.innerHTML = convoAvatar(c) + '<div style="min-width:0"><strong>' + esc(nameOf(c)) + '</strong>' + platformBadge(c) + ' <span>' + esc(c.sub || '') + '</span></div>';
     phEl.textContent = ui.composer + nameOf(c);
   }
 
@@ -217,12 +246,13 @@
     scrollEl.innerHTML = '';
     for (var i = 0; i < c.script.length; i++) {
       var s = c.script[i];
-      if (s.b || s.c) {
+      var typed = typingOn === 'u' ? !!s.u : !!(s.b || s.c);
+      if (typed) {
         var typing = document.createElement('div');
-        typing.className = 'row b';
-        typing.innerHTML = senderHead(s) + '<div class="typing" aria-label="' + esc(ui.typing) + '"><i></i><i></i><i></i></div>';
+        typing.className = typingOn === 'u' ? 'row u' + (s.tone === 'human' ? ' human' : '') : 'row b';
+        typing.innerHTML = (typingOn === 'u' ? replyHead(s) : senderHead(s)) + '<div class="typing" aria-label="' + esc(ui.typing) + '"><i></i><i></i><i></i></div>';
         scrollEl.appendChild(typing); toBottom();
-        await wait(s.c ? 1300 : 700 + Math.min(900, (s.b || '').length * 12));
+        await wait(s.c ? 1300 : 700 + Math.min(900, (s.b || s.u || '').length * 12));
         if (my !== runId) return;
         typing.remove();
       } else {
