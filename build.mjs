@@ -61,7 +61,8 @@ function validate(d, name) {
   if (!Array.isArray(d.convos) || d.convos.length === 0) errs.push('convos 至少要有一段對話')
   const convoIds = (Array.isArray(d.convos) ? d.convos : []).map((c) => c?.id)
   if (!convoIds.includes(d.app?.defaultConvo)) errs.push(`app.defaultConvo「${d.app?.defaultConvo}」不在 convos 裡`)
-  if (new Set(convoIds).size !== convoIds.length) errs.push('convos 的 id 有重複')
+  const namedIds = convoIds.filter((id) => typeof id === 'string')
+  if (new Set(namedIds).size !== namedIds.length) errs.push('convos 的 id 有重複')
 
   const str = (v) => typeof v === 'string' && v.trim() !== ''
   const list = (v) => Array.isArray(v) && v.length > 0
