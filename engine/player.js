@@ -29,7 +29,12 @@
   function nameOf(c) { return c.name || D.agents[c.id].name; }
   function lastLine(c) {
     for (var i = c.script.length - 1; i >= 0; i--) {
-      if (c.script[i].b) return c.script[i].b.replace(/<[^>]+>/g, '');
+      if (c.script[i].b) {
+        // b 是 HTML：交給瀏覽器解析後取純文字，&lt; 這類字元才不會被跳脫兩次
+        var tmp = document.createElement('div');
+        tmp.innerHTML = c.script[i].b;
+        return tmp.textContent;
+      }
     }
     return '';
   }

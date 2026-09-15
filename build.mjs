@@ -53,25 +53,28 @@ function tokens(obj, where) {
 // 劇本寫錯時在建置階段就擋下來，而不是打開頁面才發現一片空白
 function validate(d, name) {
   const errs = []
-  const agentIds = Object.keys(d.agents || {})
+  const agentIds = Object.keys(d.agents || {}).filter((id) => d.agents[id] && typeof d.agents[id] === 'object')
   const hasAgent = (id) => agentIds.includes(id)
   if (!d.title) errs.push('缺少 title')
   if (!d.intro?.headline) errs.push('缺少 intro.headline')
   if (!d.app?.brand || !d.app?.user?.name) errs.push('缺少 app.brand 或 app.user.name')
   if (!Array.isArray(d.convos) || d.convos.length === 0) errs.push('convos 至少要有一段對話')
-  const convoIds = (d.convos || []).map((c) => c.id)
+  const convoIds = (Array.isArray(d.convos) ? d.convos : []).map((c) => c?.id)
   if (!convoIds.includes(d.app?.defaultConvo)) errs.push(`app.defaultConvo「${d.app?.defaultConvo}」不在 convos 裡`)
   if (new Set(convoIds).size !== convoIds.length) errs.push('convos 的 id 有重複')
 
   const str = (v) => typeof v === 'string' && v.trim() !== ''
   const list = (v) => Array.isArray(v) && v.length > 0
+  const obj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v)
 
   for (const [id, a] of Object.entries(d.agents || {})) {
-    if (!str(a.name) || !str(a.glyph) || !str(a.color)) errs.push(`小編「${id}」需要 name、glyph、color`)
+    if (!obj(a) || !str(a.name) || !str(a.glyph) || !str(a.color)) errs.push(`小編「${id}」需要 name、glyph、color`)
   }
 
-  for (const c of Array.isArray(d.convos) ? d.convos : []) {
+  for (const [ci, c] of (Array.isArray(d.convos) ? d.convos : []).entries()) {
+    if (!obj(c)) { errs.push(`convos 第 ${ci + 1} 段不是物件`); continue }
     const where = `對話「${c.id}」`
+    if (!str(c.id)) errs.push(`convos 第 ${ci + 1} 段缺少 id（群組也要有自己的 id）`)
     if (!str(c.time)) errs.push(`${where} 缺少 time`)
     if (c.group) {
       if (!str(c.name)) errs.push(`${where} 是群組，需要 name`)
@@ -84,6 +87,7 @@ function validate(d, name) {
     if (!list(c.script)) { errs.push(`${where} 的 script 要是至少一步的陣列`); continue }
     c.script.forEach((s, i) => {
       const at = `${where} 第 ${i + 1} 步`
+      if (!obj(s)) return errs.push(`${at} 不是物件`)
       const kinds = ['t', 'u', 'b', 'c', 'e'].filter((k) => k in s)
       if (kinds.length !== 1) return errs.push(`${at} 必須剛好是 t/u/b/c/e 其中一種，現在是 [${kinds.join(',')}]`)
       const k = kinds[0]
@@ -111,6 +115,7 @@ function validate(d, name) {
   }
   for (const [i, f] of (Array.isArray(d.features?.cards) ? d.features.cards : []).entries()) {
     const at = `功能卡第 ${i + 1} 張`
+    if (!obj(f)) { errs.push(`${at} 不是物件`); continue }
     if (!FEATURE_KINDS.includes(f.kind)) { errs.push(`${at} kind「${f.kind}」不存在，可用：${FEATURE_KINDS.join(', ')}`); continue }
     if (!str(f.title) || !str(f.desc)) errs.push(`${at} 缺少 title 或 desc`)
     const need = { computer: ['label', 'status', 'task'], watch: ['banner', 'cursor'], memory: ['event'], handoff: [] }[f.kind]
@@ -119,14 +124,15 @@ function validate(d, name) {
       if (!list(f.bubbles) || !f.bubbles.every(str)) errs.push(`${at}（memory）的 bubbles 要是至少一句的陣列`)
       if (!hasAgent(f.agent)) errs.push(`${at} 的 agent「${f.agent}」不在 agents 裡`)
     }
-    if (f.kind === 'handoff' && !(Array.isArray(f.agents) && f.agents.length >= 2 && f.agents.every(hasAgent))) {
-      errs.push(`${at} 的 agents 至少要兩位且都存在`)
+    if (f.kind === 'handoff' && !(Array.isArray(f.agents) && f.agents.length >= 2 && f.agents.every(hasAgent) &&
+        f.agents.every((a, j) => j === 0 || a !== f.agents[j - 1]))) {
+      errs.push(`${at} 的 agents 至少要兩位、都存在，且相鄰兩位不能相同（不能自己交給自己）`)
     }
   }
 
   if (d.breakdown) {
     if (!str(d.breakdown.title)) errs.push('breakdown 缺少 title')
-    if (!list(d.breakdown.columns) || !d.breakdown.columns.every((col) => str(col.title) && str(col.html))) {
+    if (!list(d.breakdown.columns) || !d.breakdown.columns.every((col) => obj(col) && str(col.title) && str(col.html))) {
       errs.push('breakdown.columns 要是至少一欄的陣列，每欄有 title 與 html')
     }
   }
