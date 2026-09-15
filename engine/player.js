@@ -3,7 +3,8 @@
 (function () {
   var D = window.DEMO;
   var ui = D.ui;
-  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var reduce = motionQuery.matches;
 
   var ICON = {
     clock: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.6V8l2.3 1.5"/></svg>',
@@ -135,7 +136,8 @@
       step++;
     }
     draw();
-    if (!reduce) setInterval(draw, 2600);
+    // 計時器一直在跑，但「減少動態效果」開啟時不換內容，使用者中途切換設定也會即時生效
+    setInterval(function () { if (!reduce) draw(); }, 2600);
   });
 
   // ---------- 對話 ----------
@@ -239,6 +241,10 @@
     if (btn) select(btn.getAttribute('data-id'), true);
   });
   document.getElementById('replay').addEventListener('click', function () { play(current); });
+  motionQuery.addEventListener('change', function (ev) {
+    reduce = ev.matches;
+    if (reduce) showStatic(current); // 停掉正在播放的對話，直接顯示完整內容
+  });
 
   select(D.app.defaultConvo, false);
 })();

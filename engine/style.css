@@ -229,8 +229,8 @@ body {
 /* ---------- Responsive ---------- */
 @media (max-width: 720px) {
   body { padding: 0 16px; padding-block: 32px 56px; }
-  .window { grid-template-columns: 1fr; grid-template-rows: auto 1fr; height: 720px; }
-  .side { border-right: 0; border-bottom: 1px solid var(--border); }
+  .window { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; height: 720px; }
+  .side { border-right: 0; border-bottom: 1px solid var(--border); min-width: 0; }
   .search, .side-foot { display: none; }
   .list { flex-direction: row; overflow-x: auto; overflow-y: hidden; padding: 0 10px 10px; gap: 6px; flex: none; }
   .list li { flex: none; }

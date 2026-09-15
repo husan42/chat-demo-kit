@@ -63,34 +63,72 @@ function validate(d, name) {
   if (!convoIds.includes(d.app?.defaultConvo)) errs.push(`app.defaultConvo「${d.app?.defaultConvo}」不在 convos 裡`)
   if (new Set(convoIds).size !== convoIds.length) errs.push('convos 的 id 有重複')
 
-  for (const c of d.convos || []) {
+  const str = (v) => typeof v === 'string' && v.trim() !== ''
+  const list = (v) => Array.isArray(v) && v.length > 0
+
+  for (const [id, a] of Object.entries(d.agents || {})) {
+    if (!str(a.name) || !str(a.glyph) || !str(a.color)) errs.push(`小編「${id}」需要 name、glyph、color`)
+  }
+
+  for (const c of Array.isArray(d.convos) ? d.convos : []) {
     const where = `對話「${c.id}」`
+    if (!str(c.time)) errs.push(`${where} 缺少 time`)
     if (c.group) {
-      if (!c.name) errs.push(`${where} 是群組，需要 name`)
-      if (c.group.length !== 2 || !c.group.every(hasAgent)) errs.push(`${where} 的 group 要列兩個存在的 agents`)
+      if (!str(c.name)) errs.push(`${where} 是群組，需要 name`)
+      if (!Array.isArray(c.group) || c.group.length !== 2 || c.group[0] === c.group[1] || !c.group.every(hasAgent)) {
+        errs.push(`${where} 的 group 要列兩位不同、且存在於 agents 的小編`)
+      }
     } else if (!hasAgent(c.id)) {
       errs.push(`${where} 的 id 要對應 agents 裡的某一位`)
     }
-    ;(c.script || []).forEach((s, i) => {
+    if (!list(c.script)) { errs.push(`${where} 的 script 要是至少一步的陣列`); continue }
+    c.script.forEach((s, i) => {
       const at = `${where} 第 ${i + 1} 步`
       const kinds = ['t', 'u', 'b', 'c', 'e'].filter((k) => k in s)
       if (kinds.length !== 1) return errs.push(`${at} 必須剛好是 t/u/b/c/e 其中一種，現在是 [${kinds.join(',')}]`)
-      if (s.e && !EVENT_ICONS.includes(s.e)) errs.push(`${at} 的事件圖示「${s.e}」不存在，可用：${EVENT_ICONS.join(', ')}`)
-      if (s.e && !s.label) errs.push(`${at} 事件缺少 label`)
-      if (s.c && !s.c.every((r) => Array.isArray(r) && r.length === 3 && ['ok', 'flag'].includes(r[0]))) {
-        errs.push(`${at} 清單每一行要是 ['ok' 或 'flag', 項目, 結果]`)
+      const k = kinds[0]
+      if (k === 'c') {
+        if (!list(s.c) || !s.c.every((r) => Array.isArray(r) && r.length === 3 && ['ok', 'flag'].includes(r[0]) && str(r[1]) && str(r[2]))) {
+          errs.push(`${at} 清單要至少一行，每一行是 ['ok' 或 'flag', 項目, 結果]`)
+        }
+      } else if (!str(s[k])) {
+        errs.push(`${at} 的 ${k} 不能是空的`)
       }
-      if (s.from && !hasAgent(s.from)) errs.push(`${at} 的 from「${s.from}」不在 agents 裡`)
-      if (c.group && (s.b || s.c) && !s.from) errs.push(`${at} 在群組裡，小編訊息要標 from`)
+      if (k === 'e') {
+        if (!EVENT_ICONS.includes(s.e)) errs.push(`${at} 的事件圖示「${s.e}」不存在，可用：${EVENT_ICONS.join(', ')}`)
+        if (!str(s.label)) errs.push(`${at} 事件缺少 label`)
+      }
+      if ('from' in s && !(c.group ? c.group.includes(s.from) : hasAgent(s.from))) {
+        errs.push(`${at} 的 from「${s.from}」${c.group ? '不是這個群組的成員' : '不在 agents 裡'}`)
+      }
+      if (c.group && (k === 'b' || k === 'c') && !s.from) errs.push(`${at} 在群組裡，小編訊息要標 from`)
     })
   }
 
-  for (const [i, f] of (d.features?.cards || []).entries()) {
+  if (d.features) {
+    if (!list(d.features.cards)) errs.push('features.cards 要是至少一張卡片的陣列（不需要功能卡就整段刪掉 features）')
+    if (!str(d.features.title)) errs.push('features 缺少 title')
+  }
+  for (const [i, f] of (Array.isArray(d.features?.cards) ? d.features.cards : []).entries()) {
     const at = `功能卡第 ${i + 1} 張`
     if (!FEATURE_KINDS.includes(f.kind)) { errs.push(`${at} kind「${f.kind}」不存在，可用：${FEATURE_KINDS.join(', ')}`); continue }
-    if (!f.title || !f.desc) errs.push(`${at} 缺少 title 或 desc`)
-    if (f.kind === 'memory' && !hasAgent(f.agent)) errs.push(`${at} 的 agent「${f.agent}」不在 agents 裡`)
-    if (f.kind === 'handoff' && !(f.agents?.length >= 2 && f.agents.every(hasAgent))) errs.push(`${at} 的 agents 至少要兩位且都存在`)
+    if (!str(f.title) || !str(f.desc)) errs.push(`${at} 缺少 title 或 desc`)
+    const need = { computer: ['label', 'status', 'task'], watch: ['banner', 'cursor'], memory: ['event'], handoff: [] }[f.kind]
+    for (const key of need) if (!str(f[key])) errs.push(`${at}（${f.kind}）缺少 ${key}`)
+    if (f.kind === 'memory') {
+      if (!list(f.bubbles) || !f.bubbles.every(str)) errs.push(`${at}（memory）的 bubbles 要是至少一句的陣列`)
+      if (!hasAgent(f.agent)) errs.push(`${at} 的 agent「${f.agent}」不在 agents 裡`)
+    }
+    if (f.kind === 'handoff' && !(Array.isArray(f.agents) && f.agents.length >= 2 && f.agents.every(hasAgent))) {
+      errs.push(`${at} 的 agents 至少要兩位且都存在`)
+    }
+  }
+
+  if (d.breakdown) {
+    if (!str(d.breakdown.title)) errs.push('breakdown 缺少 title')
+    if (!list(d.breakdown.columns) || !d.breakdown.columns.every((col) => str(col.title) && str(col.html))) {
+      errs.push('breakdown.columns 要是至少一欄的陣列，每欄有 title 與 html')
+    }
   }
 
   if (errs.length) throw new Error(`demos/${name} 劇本有 ${errs.length} 個問題：\n  - ${errs.join('\n  - ')}`)
@@ -115,9 +153,9 @@ async function build(name, css, player) {
     `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>`,
     `<link rel="stylesheet" href="${escHtml(font.href)}">`,
     `<style>`,
-    `:root { --font: ${font.family}; ${tokens(light, 'theme.light')} }`,
-    `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { ${tokens(dark, 'theme.dark')} } }`,
-    `:root[data-theme="dark"] { ${tokens(dark, 'theme.dark')} }`,
+    `:root { color-scheme: light; --font: ${font.family}; ${tokens(light, 'theme.light')} }`,
+    `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { color-scheme: dark; ${tokens(dark, 'theme.dark')} } }`,
+    `:root[data-theme="dark"] { color-scheme: dark; ${tokens(dark, 'theme.dark')} }`,
     css,
     `</style>`,
     `<div class="wrap" id="app"></div>`,

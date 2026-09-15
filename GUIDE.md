@@ -30,6 +30,17 @@ export default {
 }
 ```
 
+### 哪些欄位可以放 HTML
+
+劇本檔是你自己寫的程式碼，所以不做過濾。下面這些欄位會**原樣當 HTML 放進頁面**，可以用 `<b>`、`<mark>`、`<br>`；要顯示 `<`、`&` 這類符號時請寫成 `&lt;`、`&amp;`：
+
+- `intro` 的全部欄位
+- `script` 的 `b`（小編訊息）
+- `features` 的 `title`、`lead`，以及每張卡的 `title`、`desc`、`bubbles`
+- `breakdown` 的全部欄位（`columns[].html` 可以放整段結構）
+
+其餘欄位（小編名稱、`u` 使用者訊息、事件、清單、時間、`app` 裡的文字）一律當純文字顯示，寫 HTML 會原樣顯示出標籤。
+
 ### agents（小編）
 
 ```js
