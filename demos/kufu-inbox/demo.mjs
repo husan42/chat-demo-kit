@@ -37,9 +37,10 @@ export default {
   },
 
   platforms: {
-    LINE: { label: 'LINE', color: '#06C755' },
+    // 標示字很小，底色與文字色的對比要夠：LINE 綠配深色字、IG 用單色洋紅
+    LINE: { label: 'LINE', color: '#06C755', ink: '#04230F' },
     FB: { label: 'FB', color: '#0866FF' },
-    IG: { label: 'IG', color: 'linear-gradient(45deg, #F58529, #DD2A7B 55%, #8134AF)' }
+    IG: { label: 'IG', color: '#C13584' }
   },
 
   // 顧客與客服人員都放在這裡（頭像、名稱）

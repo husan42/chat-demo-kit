@@ -224,7 +224,7 @@
   }
 
   function header(c) {
-    titleEl.innerHTML = convoAvatar(c) + '<div style="min-width:0"><strong>' + esc(nameOf(c)) + '</strong>' + platformBadge(c) + ' <span>' + esc(c.sub || '') + '</span></div>';
+    titleEl.innerHTML = convoAvatar(c) + '<div style="min-width:0"><strong>' + esc(nameOf(c)) + '</strong>' + platformBadge(c) + ' <span class="chat-sub">' + esc(c.sub || '') + '</span></div>';
     phEl.textContent = ui.composer + nameOf(c);
   }
 

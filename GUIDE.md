@@ -97,7 +97,7 @@ agents: {
 - 群組對話裡的 `b`、`c` 必須加 `from: 'agentId'`
 - 事件圖示 `e`：`clock`（例行任務）、`send`（發送）、`rule`（記錄）、`handoff`（交接）、`tool`（接上工具）、`book`（知識庫）、`priority`（優先度）、`tag`（標籤）、`person`（轉真人）、`card`（卡片）、`pause`（暫停）
 
-### features.cards（功能卡，四種）
+### features.cards（功能卡，五種）
 
 ```js
 { kind: 'computer', title, desc, label: '即時查詢', status: '查詢中', task: '登入物流後台，查 214 筆訂單' }

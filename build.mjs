@@ -72,6 +72,7 @@ function validate(d, name) {
   const platformIds = obj(d.platforms) ? Object.keys(d.platforms) : []
   for (const [id, p] of Object.entries(obj(d.platforms) ? d.platforms : {})) {
     if (!obj(p) || !str(p.label) || !str(p.color)) errs.push(`平台「${id}」需要 label 與 color`)
+    else if ('ink' in p && !str(p.ink)) errs.push(`平台「${id}」的 ink（文字色）要是色碼字串`)
   }
   const checkRowsOk = (rows) => list(rows) && rows.every((r) => Array.isArray(r) && r.length === 3 && ['ok', 'flag'].includes(r[0]) && str(r[1]) && str(r[2]))
 
@@ -131,6 +132,7 @@ function validate(d, name) {
     if (!FEATURE_KINDS.includes(f.kind)) { errs.push(`${at} kind「${f.kind}」不存在，可用：${FEATURE_KINDS.join(', ')}`); continue }
     if (!str(f.title) || !str(f.desc)) errs.push(`${at} 缺少 title 或 desc`)
     const need = { computer: ['label', 'status', 'task'], watch: ['banner', 'cursor'], memory: ['event'], handoff: [], checklist: [] }[f.kind]
+    if (f.kind === 'checklist' && 'caption' in f && !str(f.caption)) errs.push(`${at}（checklist）的 caption 要是文字`)
     if (f.kind === 'checklist' && !checkRowsOk(f.rows)) errs.push(`${at}（checklist）的 rows 要至少一行，每一行是 ['ok' 或 'flag', 項目, 結果]`)
     for (const key of need) if (!str(f[key])) errs.push(`${at}（${f.kind}）缺少 ${key}`)
     if (f.kind === 'memory') {
