@@ -97,14 +97,17 @@ agents: {
 - 群組對話裡的 `b`、`c` 必須加 `from: 'agentId'`
 - 事件圖示 `e`：`clock`（例行任務）、`send`（發送）、`rule`（記錄）、`handoff`（交接）、`tool`（接上工具）、`book`（知識庫）、`priority`（優先度）、`tag`（標籤）、`person`（轉真人）、`card`（卡片）、`pause`（暫停）
 
-### features.cards（功能卡，五種）
+### features.cards（功能卡，七種）
 
 ```js
 { kind: 'computer', title, desc, label: '即時查詢', status: '查詢中', task: '登入物流後台，查 214 筆訂單' }
 { kind: 'watch',    title, desc, banner: '「推播小編」正在觀看學習', cursor: '你' }
 { kind: 'memory',   title, desc, bubbles: ['小編的話', '...'], event: '已更新記憶', agent: 'crm' }
 { kind: 'handoff',  title, desc, agents: ['post', 'cast', 'chief'] }  // 依序輪播 A→B、B→C
-{ kind: 'checklist', title, desc, caption: '推播成效', rows: [['ok', '發送', '1,247 位'], ['flag', '未送出', '11 位']] }
+{ kind: 'checklist', title, desc, caption: '推播成效', rows: [['ok', '發送', '1,247 位'], ['ok', '點擊', '312 位']] }
+{ kind: 'tags',      title, desc, agent: 'chen', message: '顧客說的話', label: 'AI 已貼上標籤', tags: ['離島配送', '中秋禮盒'] }  // 標籤依序跳出
+{ kind: 'post',      title, desc, account: 'shop', meta: 'Instagram 貼文', caption: '貼文圖上的字',
+  comments: [{ from: 'amy', text: '+1', reply: '已私訊您囉', dm: '已私訊卡片訊息' }] }  // 留言 → 回覆 → 私訊提示輪播
 ```
 
 放 2 張或 4 張排版最好看。

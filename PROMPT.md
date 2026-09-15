@@ -21,7 +21,7 @@
 3. 【】
 群組對話：【群組名】，成員【小編 A】、【小編 B】，展示兩人交接【什麼工作】
 
-【功能卡】要放：【computer / watch / memory / handoff，選 2 或 4 張】
+【功能卡】要放：【computer / watch / memory / handoff / checklist / tags / post，選 2 或 4 張】
 
 【設計】主色【#】、底色【#】，其餘沿用預設
 

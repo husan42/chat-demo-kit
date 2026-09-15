@@ -171,9 +171,7 @@
   Array.prototype.forEach.call(document.querySelectorAll('[data-post]'), function (el) {
     var f = D.features.cards[+el.getAttribute('data-post')];
     var idx = 0;
-    var timers = [];
     function show() {
-      timers.forEach(clearTimeout); timers = [];
       var cm = f.comments[idx % f.comments.length];
       idx++;
       el.innerHTML =
