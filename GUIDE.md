@@ -71,7 +71,7 @@ agents: {
 ```js
 {
   id: 'post',                   // 一般對話：對應 agents 的 key
-  sub: 'IG / FB 貼文與直播留言', // 標題旁的副標
+  sub: 'IG / FB 貼文留言', // 標題旁的副標
   time: '晚上 10:21',           // 左側清單的時間
   platform: 'IG',               // 選填，對應 platforms 的 key
   preview: '左側清單的預覽文字',  // 選填，預設取最後一則回覆
@@ -92,7 +92,7 @@ agents: {
 | `{ u: '回覆內容', as: '小美', tone: 'human' }` | 靠右泡泡，上方標回覆者；`tone: 'ai'` 主色、`'human'` 深色 |
 | `{ b: '小編說的話，可用 <b>粗體</b>' }` | 靠左泡泡，先出現「輸入中」 |
 | `{ c: [['ok', '留言', '已回覆 186 則'], ['flag', '待你判斷', '3 則']] }` | 打勾清單，`flag` 那行黃底加旗子 |
-| `{ e: 'clock', label: '已建立例行任務', strong: '直播留言自動私訊' }` | 置中淡色系統事件 |
+| `{ e: 'clock', label: '已建立例行任務', strong: '貼文留言自動私訊' }` | 置中淡色系統事件 |
 
 - 群組對話裡的 `b`、`c` 必須加 `from: 'agentId'`
 - 事件圖示 `e`：`clock`（例行任務）、`send`（發送）、`rule`（記錄）、`handoff`（交接）、`tool`（接上工具）、`book`（知識庫）、`priority`（優先度）、`tag`（標籤）、`person`（轉真人）、`card`（卡片）、`pause`（暫停）

@@ -164,7 +164,7 @@ export default {
       },
       {
         kind: 'post',
-        title: '貼文、直播留言，一則一則自動回',
+        title: '貼文留言，一則一則自動回',
         desc: '顧客在貼文底下留言，系統自動公開回覆，再私訊附上選購按鈕的卡片訊息；不同留言內容可以回不同訊息。',
         account: 'shop',
         meta: 'Instagram 貼文',
