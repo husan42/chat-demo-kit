@@ -91,6 +91,24 @@
         '<div class="fc-mem-event">' + esc(f.event) + '<span class="fc-chip">' + avatar(f.agent, 'xs') + esc(D.agents[f.agent].name) + '</span></div>' +
         '</div></div>';
     }
+    if (f.kind === 'tags') {
+      return '<div class="fc-stage fc-plain"><div class="fc-tags">' +
+        '<div class="fc-tags-msg">' + avatar(f.agent, 'xs') + '<span>' + esc(D.agents[f.agent].name) + '</span></div>' +
+        '<div class="fc-bubble">' + esc(f.message) + '</div>' +
+        '<div class="fc-tags-label">' + ICON.tag + esc(f.label) + '</div>' +
+        '<div class="fc-tags-row">' + f.tags.map(function (t, j) {
+          return '<span class="fc-tag" style="animation-delay:' + (0.5 + j * 0.45) + 's">' + esc(t) + '</span>';
+        }).join('') + '</div>' +
+        '</div></div>';
+    }
+    if (f.kind === 'post') {
+      var acc = D.agents[f.account];
+      return '<div class="fc-stage fc-plain fc-post-stage"><div class="fc-post">' +
+        '<div class="fc-post-head">' + avatar(f.account, 'xs') + '<strong>' + esc(acc.name) + '</strong><span>' + esc(f.meta || '') + '</span></div>' +
+        '<div class="fc-post-img">' + esc(f.caption) + '</div>' +
+        '<div class="fc-comments" data-post="' + i + '"></div>' +
+        '</div></div>';
+    }
     if (f.kind === 'checklist') {
       return '<div class="fc-stage fc-plain"><div class="fc-list">' +
         (f.caption ? '<div class="fc-list-cap">' + esc(f.caption) + '</div>' : '') +
@@ -148,6 +166,26 @@
       '</section>';
   }
   document.getElementById('app').innerHTML = html;
+
+  // 貼文卡片：留言 → 自動回覆 → 私訊提示，輪流播放每一則留言
+  Array.prototype.forEach.call(document.querySelectorAll('[data-post]'), function (el) {
+    var f = D.features.cards[+el.getAttribute('data-post')];
+    var idx = 0;
+    var timers = [];
+    function show() {
+      timers.forEach(clearTimeout); timers = [];
+      var cm = f.comments[idx % f.comments.length];
+      idx++;
+      el.innerHTML =
+        '<div class="fc-cm">' + avatar(cm.from, 'xs') + '<div><b>' + esc(D.agents[cm.from].name) + '</b> ' + esc(cm.text) + '</div></div>' +
+        '<div class="fc-cm fc-cm-reply">' + avatar(f.account, 'xs') + '<div><b>' + esc(D.agents[f.account].name) + '</b> ' + esc(cm.reply) + '</div></div>' +
+        (cm.dm ? '<div class="fc-dm">' + ICON.send + esc(cm.dm) + '</div>' : '');
+      if (reduce) return;
+      el.classList.remove('fc-go'); void el.offsetWidth; el.classList.add('fc-go');
+    }
+    show();
+    setInterval(function () { if (!reduce) show(); }, 4200);
+  });
 
   // 接力卡片：依序顯示「A 傳給 B」「B 傳給 C」…
   Array.prototype.forEach.call(document.querySelectorAll('[data-relay]'), function (el) {

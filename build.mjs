@@ -41,7 +41,7 @@ const TOKEN = {
   stageA: '--stage-a', stageB: '--stage-b'
 }
 const EVENT_ICONS = ['clock', 'send', 'rule', 'handoff', 'tool', 'book', 'priority', 'tag', 'person', 'card', 'pause']
-const FEATURE_KINDS = ['computer', 'watch', 'memory', 'handoff', 'checklist']
+const FEATURE_KINDS = ['computer', 'watch', 'memory', 'handoff', 'checklist', 'tags', 'post']
 
 function tokens(obj, where) {
   return Object.entries(obj).map(([k, v]) => {
@@ -131,7 +131,18 @@ function validate(d, name) {
     if (!obj(f)) { errs.push(`${at} 不是物件`); continue }
     if (!FEATURE_KINDS.includes(f.kind)) { errs.push(`${at} kind「${f.kind}」不存在，可用：${FEATURE_KINDS.join(', ')}`); continue }
     if (!str(f.title) || !str(f.desc)) errs.push(`${at} 缺少 title 或 desc`)
-    const need = { computer: ['label', 'status', 'task'], watch: ['banner', 'cursor'], memory: ['event'], handoff: [], checklist: [] }[f.kind]
+    const need = { computer: ['label', 'status', 'task'], watch: ['banner', 'cursor'], memory: ['event'], handoff: [], checklist: [], tags: ['message', 'label'], post: ['caption'] }[f.kind]
+    if (f.kind === 'tags') {
+      if (!hasAgent(f.agent)) errs.push(`${at}（tags）的 agent「${f.agent}」不在 agents 裡`)
+      if (!list(f.tags) || !f.tags.every(str)) errs.push(`${at}（tags）的 tags 要是至少一個標籤的陣列`)
+    }
+    if (f.kind === 'post') {
+      if (!hasAgent(f.account)) errs.push(`${at}（post）的 account「${f.account}」不在 agents 裡`)
+      if ('meta' in f && !str(f.meta)) errs.push(`${at}（post）的 meta 要是文字`)
+      if (!list(f.comments) || !f.comments.every((cm) => obj(cm) && hasAgent(cm.from) && str(cm.text) && str(cm.reply) && (!('dm' in cm) || str(cm.dm)))) {
+        errs.push(`${at}（post）的 comments 每則要有 from（存在的 agents）、text、reply，dm 選填`)
+      }
+    }
     if (f.kind === 'checklist' && 'caption' in f && !str(f.caption)) errs.push(`${at}（checklist）的 caption 要是文字`)
     if (f.kind === 'checklist' && !checkRowsOk(f.rows)) errs.push(`${at}（checklist）的 rows 要至少一行，每一行是 ['ok' 或 'flag', 項目, 結果]`)
     for (const key of need) if (!str(f[key])) errs.push(`${at}（${f.kind}）缺少 ${key}`)

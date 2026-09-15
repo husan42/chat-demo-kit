@@ -52,7 +52,8 @@ export default {
     wu: { name: '吳小姐', glyph: '吳', color: '#B7A6F2' },
     ai: { name: 'AI 客服', glyph: 'AI', color: '#FFDD36' },
     mei: { name: '小美', glyph: '美', color: '#F2C0A2' },
-    store: { name: '門市人員', glyph: '門', color: '#C9D8A8' }
+    store: { name: '門市人員', glyph: '門', color: '#C9D8A8' },
+    shop: { name: '山嵐手作', glyph: '山', color: '#FFDD36' }
   },
 
   convos: [
@@ -142,15 +143,13 @@ export default {
         agents: ['ai', 'mei', 'ai', 'store']
       },
       {
-        kind: 'memory',
-        title: '每位顧客都有自己的時間軸',
-        desc: '問過什麼、被貼了什麼標籤、點過哪一則推播，全部記在同一張顧客卡上，換誰接手都看得懂。',
-        bubbles: [
-          '9/08　IG 私訊詢問離島配送',
-          '9/08　AI 貼上標籤「離島配送」',
-          '9/12　點擊推播「中秋禮盒回購」'
-        ],
-        event: '顧客時間軸', agent: 'chen'
+        kind: 'tags',
+        title: 'AI 讀懂對話，自動貼標籤',
+        desc: '先設定好想追蹤的標籤，AI 看完對話內容就幫顧客貼上。之後發推播，可以直接挑出貼了某個標籤的顧客。',
+        agent: 'chen',
+        message: '請問中秋禮盒可以寄冷凍到金門嗎？常溫的可以放多久？',
+        label: 'AI 已貼上標籤',
+        tags: ['離島配送', '中秋禮盒', '詢問保存期限']
       },
       {
         kind: 'checklist',
@@ -164,14 +163,16 @@ export default {
         ]
       },
       {
-        kind: 'checklist',
+        kind: 'post',
         title: '貼文、直播留言，一則一則自動回',
         desc: '顧客在貼文底下留言，系統自動公開回覆，再私訊附上選購按鈕的卡片訊息；不同留言內容可以回不同訊息。',
-        caption: '中秋禮盒開賣 · 貼文自動回覆',
-        rows: [
-          ['ok', '留言', '186 則已公開回覆'],
-          ['ok', '私訊', '附「立即選購」按鈕的卡片訊息'],
-          ['ok', '分流', '問價格、問運送、+1，各回不同內容']
+        account: 'shop',
+        meta: 'Instagram 貼文',
+        caption: '中秋禮盒開賣',
+        comments: [
+          { from: 'amy', text: '+1 想要兩盒', reply: '已私訊您禮盒資訊囉！', dm: '已私訊卡片訊息 · 立即選購' },
+          { from: 'wang', text: '請問一盒多少錢？', reply: '價格和優惠已經私訊給您～', dm: '已私訊價格說明' },
+          { from: 'wu', text: '可以寄到台東嗎', reply: '可以喔，配送方式私訊給您了！', dm: '已私訊配送說明' }
         ]
       }
     ]
@@ -191,7 +192,7 @@ export default {
       },
       {
         title: '功能卡片',
-        html: '<ul><li><b>時間軸</b>：顧客時間軸</li><li><b>推播成效</b>：推播行銷與點擊追蹤</li><li><b>貼文留言</b>：社群互動監控、貼文自動回覆</li></ul>'
+        html: '<ul><li><b>轉真人</b>：轉真人客服、暫停自動回覆</li><li><b>AI 標籤</b>：AI 標籤分類，推播可依 AI 標籤篩選對象</li><li><b>推播成效</b>：推播行銷與點擊追蹤</li><li><b>貼文留言</b>：貼文自動回覆（公開回覆＋私訊）</li></ul>'
       }
     ],
     note: '上線前請再次核對：畫面為示意，實際介面與用詞以產品為準；「推播點擊記入時間軸」只記錄首次點擊。'
